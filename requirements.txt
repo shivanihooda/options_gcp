@@ -6,3 +6,4 @@ pandas~=2.0.2
 pandas_gbq
 pandas.io
 gcsfs
+google-cloud-bigquery

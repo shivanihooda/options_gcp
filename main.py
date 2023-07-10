@@ -7,6 +7,8 @@ import pandas_gbq
 from datetime import datetime
 import yahoo_fin.options as ops
 import logging
+from google.cloud import bigquery
+
 
 # import yahoo_fin.stock_info as stocks
 
@@ -93,13 +95,24 @@ def get_options_data(logging):
 
 
 def bq_load(key, value, logging):
-    project_name = 'polished-parser-390314'
-    dataset_name = 'options_data'
-    table_name = key
-
     logging.info(f"Off to BQ")
+    table_id = "polished-parser-390314.options_data.options_data_rt"
+    client = bigquery.Client()
+    table = client.get_table(table_id)
+    errors = client.insert_rows_from_dataframe(table, value)  # Make an API request.
+    if errors == []:
+        print("Data Loaded")
+        return "Success"
+    else:
+        print(errors)
+        return "Failed"
+    # project_name = 'polished-parser-390314'
+    # dataset_name = 'options_data'
+    # table_name = key
+    #
+    # logging.info(f"Off to BQ")
+    #
+    # value.to_gbq(destination_table='{}.{}'.format(dataset_name, table_name), project_id=project_name,
+    #              if_exists='replace')
 
-    value.to_gbq(destination_table='{}.{}'.format(dataset_name, table_name), project_id=project_name,
-                 if_exists='replace')
-
-    logging.info(f"DONE DONE DONE")
+    # logging.info(f"DONE DONE DONE")
