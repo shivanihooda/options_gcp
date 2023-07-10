@@ -6,14 +6,7 @@ from pandas.io import gbq
 import pandas_gbq
 from datetime import datetime
 import yahoo_fin.options as ops
-import google.cloud.logging
 import logging
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-log_client = google.cloud.logging.Client()
-log_client.setup_logging()
-
 
 # import yahoo_fin.stock_info as stocks
 
@@ -37,11 +30,15 @@ def options_data_sync():
     #     return f'Data pull complete'
 
     #   else:
-    get_options_data()
+    logging.basicConfig(level=logging.DEBUG)  # Set logging level to DEBUG
+
+    logging.info("This is an info message.")
+
+    get_options_data(logging)
     return f'Data pull complete'
 
 
-def get_options_data():
+def get_options_data(logging):
     final_json = []
     count = 0
     for ticker in ticker_list:
@@ -92,10 +89,10 @@ def get_options_data():
             continue
     df = pd.DataFrame(final_json)
     logging.info(f"df data:{df}")
-    bq_load('options_data_rt', df)
+    bq_load('options_data_rt', df, logging)
 
 
-def bq_load(key, value):
+def bq_load(key, value, logging):
     project_name = 'polished-parser-390314'
     dataset_name = 'options_data'
     table_name = key
