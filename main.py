@@ -34,7 +34,7 @@ def options_data_sync():
     #   else:
     logging.basicConfig(level=logging.DEBUG)  # Set logging level to DEBUG
 
-    logging.info("This is an info message.")
+    print("This is an info message.")
 
     get_options_data(logging)
     return f'Data pull complete'
@@ -64,7 +64,7 @@ def get_options_data(logging):
                     "timestamp": datetime.now(pytz.timezone('Europe/London')).strftime("%Y:%m:%d %H:%M:%S")
                 }
                 final_json.append(revised_json)
-            logging.info(f"calls={final_json}")
+            print(f"calls={final_json}")
             data = ops.get_puts(ticker)
             json_data = json.loads(data.to_json(orient="records"))
             for json_d in json_data:
@@ -85,17 +85,17 @@ def get_options_data(logging):
                 }
                 final_json.append(revised_json)
             count = count + 1
-            logging.info(f"puts:{final_json}")
+            print(f"puts:{final_json}")
         except Exception as exc:
             print("Exception Occurred: ", ticker, " : ", exc)
             continue
     df = pd.DataFrame(final_json)
-    logging.info(f"df data:{df}")
+    print(f"df data:{df}")
     bq_load('options_data_rt', df, logging)
 
 
 def bq_load(key, value, logging):
-    logging.info(f"Off to BQ")
+    print(f"Off to BQ")
     table_id = "polished-parser-390314.options_data.options_data_rt"
     client = bigquery.Client()
     table = client.get_table(table_id)
