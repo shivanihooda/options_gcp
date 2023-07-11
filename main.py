@@ -6,6 +6,7 @@ from pandas.io import gbq
 import pandas_gbq
 from datetime import datetime
 import yahoo_fin.options as ops
+import google.cloud.logging
 import logging
 from google.cloud import bigquery
 
@@ -18,6 +19,11 @@ from google.cloud import bigquery
 #                "LIN", "AMD", "DHR", "CMCSA", "NKE", "TXN", "DIS", "WFC", "VZ", "UPS", "PM", "NEE", "MS", "INTC"}
 
 ticker_list = ["AAPL", "MSFT"]
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+log_client = google.cloud.logging.Client()
+log_client.setup_logging()
 
 
 def options_data_sync():
@@ -32,15 +38,15 @@ def options_data_sync():
     #     return f'Data pull complete'
 
     #   else:
-    logging.basicConfig(level=logging.DEBUG)  # Set logging level to DEBUG
+    # logging.basicConfig(level=logging.DEBUG)  # Set logging level to DEBUG
 
-    print("This is an info message.")
+    logging.info("This is an info message.")
 
-    get_options_data(logging)
+    get_options_data()
     return f'Data pull complete'
 
 
-def get_options_data(logging):
+def get_options_data():
     final_json = []
     count = 0
     for ticker in ticker_list:
@@ -64,7 +70,7 @@ def get_options_data(logging):
                     "timestamp": datetime.now(pytz.timezone('Europe/London')).strftime("%Y:%m:%d %H:%M:%S")
                 }
                 final_json.append(revised_json)
-            print(f"calls={final_json}")
+            logging.info(f"calls={final_json}")
             data = ops.get_puts(ticker)
             json_data = json.loads(data.to_json(orient="records"))
             for json_d in json_data:
@@ -85,26 +91,26 @@ def get_options_data(logging):
                 }
                 final_json.append(revised_json)
             count = count + 1
-            print(f"puts:{final_json}")
+            logging.info(f"puts:{final_json}")
         except Exception as exc:
-            print("Exception Occurred: ", ticker, " : ", exc)
+            logging.info("Exception Occurred: ", ticker, " : ", exc)
             continue
     df = pd.DataFrame(final_json)
-    print(f"df data:{df}")
-    bq_load('options_data_rt', df, logging)
+    logging.info(f"df data:{df}")
+    bq_load('options_data_rt', df)
 
 
-def bq_load(key, value, logging):
-    print(f"Off to BQ")
+def bq_load(key, value):
+    logging.info(f"Off to BQ")
     table_id = "polished-parser-390314.options_data.options_data_rt"
     client = bigquery.Client()
     table = client.get_table(table_id)
     errors = client.insert_rows_from_dataframe(table, value)  # Make an API request.
     if errors == []:
-        print("Data Loaded")
+        logging.info("Data Loaded")
         return "Success"
     else:
-        print(errors)
+        logging.info(errors)
         return "Failed"
     # project_name = 'polished-parser-390314'
     # dataset_name = 'options_data'
