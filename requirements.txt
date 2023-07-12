@@ -7,3 +7,4 @@ pandas_gbq
 pandas.io
 gcsfs
 google-cloud-bigquery
+google-cloud-logging
